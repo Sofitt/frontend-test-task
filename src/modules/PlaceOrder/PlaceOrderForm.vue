@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import NumberInput from "@/shared/components/NumberInput/NumberInput.vue";
-import TakeProfit from "@/components/TakeProfit.vue";
+import TakeProfit from "@/modules/PlaceOrder/components/TakeProfit.vue";
 import Button from "@/shared/components/Button/Button.vue";
-import { BASE_CURRENCY, QUOTE_CURRENCY } from "@/constants.ts";
-import { store } from "@/store";
-import PlaceOrderTypeSwitch from "@/components/PlaceOrderTypeSwitch.vue";
-import InfoIcon from "@/shared/icons/InfoIcon/InfoIcon.vue";
+import {
+  BASE_CURRENCY,
+  QUOTE_CURRENCY,
+} from "@/modules/PlaceOrder/lib/constants.ts";
+import { store } from "@/modules/PlaceOrder/PlaceOrder.store";
+import PlaceOrderTypeSwitch from "@/modules/PlaceOrder/components/PlaceOrderTypeSwitch.vue";
+import { Tooltip } from "@/shared/components";
 
 const submitButtonText = computed(() => {
   return store.activeOrderSide === "buy"
@@ -24,7 +27,7 @@ const submit = () => {
     <div>
       <div class="flex items-center gap-2">
         <span class="text-sm text-base-600">Market direction</span>
-        <InfoIcon class="size-4" />
+        <Tooltip text="" />
       </div>
 
       <PlaceOrderTypeSwitch
