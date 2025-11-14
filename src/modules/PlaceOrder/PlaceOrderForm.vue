@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import NumberInput from "@/shared/components/NumberInput/NumberInput.vue";
 import TakeProfit from "@/modules/PlaceOrder/components/TakeProfit.vue";
 import Button from "@/shared/components/Button/Button.vue";
@@ -11,13 +11,21 @@ import { store } from "@/modules/PlaceOrder/PlaceOrder.store";
 import PlaceOrderTypeSwitch from "@/modules/PlaceOrder/components/PlaceOrderTypeSwitch.vue";
 import { Tooltip } from "@/shared/components";
 
+const takeProfitRef = ref<InstanceType<typeof TakeProfit> | null>(null);
+
 const submitButtonText = computed(() => {
   return store.activeOrderSide === "buy"
     ? `Buy ${BASE_CURRENCY}`
     : `Sell ${QUOTE_CURRENCY}`;
 });
 
-const submit = () => {
+const submit = (event: Event) => {
+  event.preventDefault();
+  
+  if (takeProfitRef.value && !takeProfitRef.value.validate()) {
+    return;
+  }
+  
   console.log("submit");
 };
 </script>
@@ -51,6 +59,7 @@ const submit = () => {
         :label="`Amount, ${BASE_CURRENCY}`"
         :modelValue="store.amount"
         @update:modelValue="store.setAmount($event)"
+        :step="[0.1]"
       />
     </div>
     <div>
@@ -62,7 +71,7 @@ const submit = () => {
       />
     </div>
 
-    <TakeProfit />
+    <TakeProfit ref="takeProfitRef" />
 
     <div>
       <Button type="submit" variant="accent" :full-width="true">

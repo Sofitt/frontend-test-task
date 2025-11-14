@@ -20,7 +20,7 @@ const adjustedPosition = ref<"top" | "bottom" | "left" | "right">(
 
 const tooltipClasses = computed(() => {
   const base =
-    "absolute z-50 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap pointer-events-none";
+    "absolute z-50 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg pointer-events-none w-max max-w-sm";
   const positions = {
     top: "-translate-x-1/2 bottom-full left-1/2 mb-2",
     bottom: "-translate-x-1/2 top-full left-1/2 mt-2",
