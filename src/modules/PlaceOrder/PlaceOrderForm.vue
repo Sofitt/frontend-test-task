@@ -19,6 +19,10 @@ const submitButtonText = computed(() => {
     : `Sell ${QUOTE_CURRENCY}`;
 });
 
+const isSubmitDisabled = computed(() => {
+  return takeProfitRef.value?.hasError ?? false;
+});
+
 const submit = () => {
   if (takeProfitRef.value && !takeProfitRef.value.validate()) {
     return;
@@ -76,7 +80,13 @@ const submit = () => {
 
     <TakeProfit ref="takeProfitRef" />
 
-    <Button size="md" type="submit" variant="accent" :full-width="true">
+    <Button
+      size="md"
+      type="submit"
+      variant="accent"
+      :full-width="true"
+      :disabled="isSubmitDisabled"
+    >
       {{ submitButtonText }}
     </Button>
   </form>

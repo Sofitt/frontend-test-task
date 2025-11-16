@@ -22,6 +22,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const styleClasses = computed(() => {
@@ -44,11 +48,13 @@ const styleClasses = computed(() => {
 <template>
   <button
     :type="type"
+    :disabled="disabled"
     :class="[
       'font-medium transition-colors duration-150 ease-in-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
       { 'w-full': fullWidth },
       { 'px-4 py-3': size === 'md', 'px-3 py-2': size === 'sm' },
       styleClasses,
+      { 'pointer-events-none opacity-50': disabled },
     ]"
   >
     <slot></slot>

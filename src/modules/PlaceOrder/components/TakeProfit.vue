@@ -261,8 +261,25 @@ const validate = (): boolean => {
   return true;
 };
 
+const clearItemError = (index: number) => {
+  if (tableData.items[index].error) {
+    tableData.items[index].error = false;
+
+    const hasOtherErrors = tableData.items.some(
+      (item, i) => i !== index && item.error,
+    );
+    if (!hasOtherErrors) {
+      errorMessage.value = "";
+    }
+  }
+};
+const hasError = computed(() => {
+  return tableData.items.some((item) => item.error) || !!errorMessage.value;
+});
+
 defineExpose({
   validate,
+  hasError,
 });
 
 const sum = computed(() => {
@@ -307,7 +324,7 @@ const currency = "USDT";
           :headers="tableData.headers"
           :items="tableData.items"
           row-class="pb-[3px] mb-3 border-b border-base-400"
-          error-class="pb-1 mb-3 border-b border-red-600"
+          error-class="pb-1 mb-3 border-b border-red-400"
           gridColumns="grid-cols-[47px,minmax(0,1fr),85px] gap-3"
         >
           <template #cell-percent="{ error, index }">
@@ -317,7 +334,8 @@ const currency = "USDT";
               no-style
               :modelValue="parseFloat(tableData.items[index].percent)"
               @update:modelValue="
-                tableData.items[index].percent = $event.toString()
+                tableData.items[index].percent = $event.toString();
+                clearItemError(index);
               "
               @blur="handleProfitBlur(index)"
               :step="[1, 10]"
@@ -336,7 +354,8 @@ const currency = "USDT";
               no-style
               :modelValue="parseFloat(tableData.items[index].price)"
               @update:modelValue="
-                tableData.items[index].price = $event.toString()
+                tableData.items[index].price = $event.toString();
+                clearItemError(index);
               "
               @blur="handleTargetPriceBlur(index)"
               :step="[0.1, 1]"
@@ -354,7 +373,8 @@ const currency = "USDT";
                 no-style
                 :modelValue="parseFloat(tableData.items[index].amount)"
                 @update:modelValue="
-                  tableData.items[index].amount = $event.toString()
+                  tableData.items[index].amount = $event.toString();
+                  clearItemError(index);
                 "
                 :step="[1, 10]"
               >
@@ -376,7 +396,7 @@ const currency = "USDT";
 
         <div
           v-if="errorMessage"
-          class="my-3 border border-red-500 px-3 py-2 text-xs font-medium text-red-500"
+          class="my-3 px-3 py-2 text-xs font-medium text-red-500 outline outline-1 outline-red-500"
         >
           {{ errorMessage }}
         </div>
