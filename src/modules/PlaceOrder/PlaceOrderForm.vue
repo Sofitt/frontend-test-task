@@ -19,23 +19,23 @@ const submitButtonText = computed(() => {
     : `Sell ${QUOTE_CURRENCY}`;
 });
 
-const submit = (event: Event) => {
-  event.preventDefault();
-  
+const submit = () => {
   if (takeProfitRef.value && !takeProfitRef.value.validate()) {
     return;
   }
-  
+
   console.log("submit");
 };
 </script>
 
 <template>
-  <form method="post" @submit="submit" class="grid gap-4">
+  <form method="post" @submit.prevent="submit" class="grid gap-4">
     <div>
       <div class="flex items-center gap-2">
-        <span class="text-sm text-base-600">Market direction</span>
-        <Tooltip text="" />
+        <span class="text-sm font-medium text-base-600">Market direction</span>
+        <Tooltip
+          text="lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took"
+        />
       </div>
 
       <PlaceOrderTypeSwitch
@@ -46,6 +46,7 @@ const submit = (event: Event) => {
     </div>
     <div>
       <NumberInput
+        class="font-medium"
         id="price"
         :label="`Price, ${QUOTE_CURRENCY}`"
         :modelValue="store.price"
@@ -55,6 +56,7 @@ const submit = (event: Event) => {
     </div>
     <div>
       <NumberInput
+        class="font-medium"
         id="amount"
         :label="`Amount, ${BASE_CURRENCY}`"
         :modelValue="store.amount"
@@ -64,6 +66,7 @@ const submit = (event: Event) => {
     </div>
     <div>
       <NumberInput
+        class="font-medium"
         id="total"
         :label="`Total, ${QUOTE_CURRENCY}`"
         :modelValue="store.total()"
@@ -73,10 +76,8 @@ const submit = (event: Event) => {
 
     <TakeProfit ref="takeProfitRef" />
 
-    <div>
-      <Button type="submit" variant="accent" :full-width="true">
-        {{ submitButtonText }}
-      </Button>
-    </div>
+    <Button size="md" type="submit" variant="accent" :full-width="true">
+      {{ submitButtonText }}
+    </Button>
   </form>
 </template>

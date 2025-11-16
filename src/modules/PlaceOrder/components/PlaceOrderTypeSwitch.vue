@@ -12,7 +12,6 @@ const handleToggle = (orderType: OrderSide) => {
 <template>
   <div class="flex items-center gap-2">
     <Button
-      size="small"
       fullWidth
       :outline="activeOrderSide !== 'buy'"
       @click="handleToggle('buy')"
@@ -20,7 +19,6 @@ const handleToggle = (orderType: OrderSide) => {
       Buy
     </Button>
     <Button
-      size="small"
       fullWidth
       :outline="activeOrderSide === 'buy'"
       @click="handleToggle('sell')"

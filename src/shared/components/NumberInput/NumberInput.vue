@@ -45,8 +45,9 @@ const singleStep = props.step[0] || 1;
 const holdStep = props.step.length > 1 ? props.step[1] : props.step[0];
 
 const inputWidth = computed(() => {
-  const length = displayValue.value.length || 1;
-  return `${Math.max(1, length)}ch`;
+  const ln = displayValue.value.length;
+  const width = ln > 6 && displayValue.value.includes(".") ? ln - 1 : ln;
+  return `${Math.max(1, width)}ch`;
 });
 
 const { startHold, handleKeyUp } = useKeyHold({
@@ -111,6 +112,12 @@ const handleInput = (event: Event) => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
+  // Убираем сабмит на enter, тк это по ux неудобно ввиду большого количества инпутов
+  if (event.key === "Enter") {
+    event.preventDefault();
+    return;
+  }
+
   // Не работает если длинна числа >16 символов. BigInt решил не делать, чтобы это пофиксить
   if (keys.includes(event.key)) {
     event.preventDefault();
@@ -151,34 +158,36 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 <template>
   <div
-    :style="$attrs.style"
+    :style="$attrs.style as any"
     :class="[
       !noStyle &&
-        'group bg-base-100 px-3 pb-1.5 pt-2.5 focus-within:bg-base-200 hover:bg-base-200',
+        'group bg-base-100 px-3 pb-1.5 pt-2 focus-within:bg-base-200 hover:bg-base-200',
     ]"
   >
-    <label v-if="label" :for="id" class="block text-sm text-base-600">
-      {{ label }}
-    </label>
+    <label :for="id">
+      <span v-if="label" class="mb-0.5 block text-sm font-medium text-base-600">
+        {{ label }}
+      </span>
 
-    <div class="flex items-center">
-      <input
-        :id="id"
-        ref="inputRef"
-        type="text"
-        :class="[
-          !noStyle
-            ? 'block w-full border-0 bg-base-100 p-0 text-base-950 placeholder:text-gray-400 focus:bg-base-200 focus:outline-none group-hover:bg-base-200'
-            : 'bg-transparent outline-none',
-        ]"
-        :style="noStyle ? { width: inputWidth } : undefined"
-        v-bind="{ ...$attrs, style: '' }"
-        :value="displayValue"
-        @input="handleInput($event)"
-        @keydown="handleKeyDown($event)"
-        @keyup="handleKeyUp($event)"
-      />
-      <slot name="post-icon" />
-    </div>
+      <span class="flex items-center">
+        <input
+          :id="id"
+          ref="inputRef"
+          type="text"
+          :class="[
+            !noStyle
+              ? 'block w-full border-0 bg-base-100 p-0 text-base-950 placeholder:text-gray-400 focus:bg-base-200 focus:outline-none group-hover:bg-base-200'
+              : 'bg-transparent outline-none',
+          ]"
+          :style="noStyle ? { width: inputWidth } : undefined"
+          v-bind="{ ...$attrs, style: '' }"
+          :value="displayValue"
+          @input="handleInput($event)"
+          @keydown="handleKeyDown($event)"
+          @keyup="handleKeyUp($event)"
+        />
+        <slot name="post-icon" />
+      </span>
+    </label>
   </div>
 </template>

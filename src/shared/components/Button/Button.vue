@@ -6,6 +6,10 @@ const props = defineProps({
     type: String as PropType<"submit" | "reset" | "button" | undefined>,
     default: "button",
   },
+  size: {
+    type: String as PropType<"sm" | "md">,
+    default: "sm",
+  },
   variant: {
     type: String as PropType<"accent" | "primary">,
     default: "primary",
@@ -41,8 +45,9 @@ const styleClasses = computed(() => {
   <button
     :type="type"
     :class="[
-      'px-4 py-2 font-medium shadow-sm transition-colors duration-150 ease-in-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
+      'font-medium transition-colors duration-150 ease-in-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
       { 'w-full': fullWidth },
+      { 'px-4 py-3': size === 'md', 'px-3 py-2': size === 'sm' },
       styleClasses,
     ]"
   >

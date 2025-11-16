@@ -3,8 +3,9 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import InfoIcon from "@/shared/icons/InfoIcon/InfoIcon.vue";
 
 interface IProps {
-  text: string;
+  text?: string;
   position?: "top" | "bottom" | "left" | "right";
+  size?: string;
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -101,7 +102,12 @@ onUnmounted(() => {
   <div class="relative inline-block">
     <div ref="triggerRef" @mouseenter="showTooltip" @mouseleave="hideTooltip">
       <slot>
-        <InfoIcon class="size-4" />
+        <InfoIcon
+          :style="{
+            width: size ? size + 'px' : '16px',
+            height: size ? size + 'px' : '16px',
+          }"
+        />
       </slot>
     </div>
 

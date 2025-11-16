@@ -5,11 +5,13 @@ import { ITableHeader } from "@/shared/components/Table/Table.types.ts";
 import { CrossIcon, PlusIcon } from "@/shared/icons";
 import { store } from "@/modules/PlaceOrder/PlaceOrder.store.ts";
 import { roundToPrecision } from "@/shared/lib/math";
+import Expand from "@/shared/components/Expand/Expand.vue";
 
 type TTakeProfitTableItem = Record<"price" | "percent" | "amount", string>;
 
 const tooltipText =
   "lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took";
+const DISPLAY_PRECISION = 2;
 
 const toggleValue = ref(false);
 const errorMessage = ref("");
@@ -43,25 +45,34 @@ const tableData = reactive<{
   items: [],
 });
 
-if (tableData.items.length === 0) {
-  const initialProfit = 2;
-  const initialPrice = roundToPrecision(
-    store.price * (1 + initialProfit / 100),
-    1,
-  );
-  tableData.items.push({
-    percent: initialProfit.toString(),
-    price: initialPrice.toString(),
-    amount: "100",
-    error: false,
-  });
-}
-
 watch(
   () => store.activeOrderSide,
   (value) => {
     tableData.headers.find((header) => header.field === "amount")!.title =
       `Amount to ${value}`;
+  },
+  { immediate: true },
+);
+
+// Сбрасываем список при переключении Toggle (по тз при включении)
+watch(
+  toggleValue,
+  (isEnabled) => {
+    if (!isEnabled) return;
+
+    const initialProfit = 2;
+    const initialPrice = roundToPrecision(
+      store.price * (1 + initialProfit / 100),
+      DISPLAY_PRECISION,
+    );
+    tableData.items = [
+      {
+        percent: initialProfit.toString(),
+        price: initialPrice.toString(),
+        amount: "100",
+        error: false,
+      },
+    ];
   },
   { immediate: true },
 );
@@ -84,9 +95,20 @@ const targetFrom = computed(() => {
 });
 const targetTo = 5;
 
-const onDeleteFromTable = (index: number) => {
-  tableData.items.splice(index);
+const handleDeleteFromTable = (index: number) => {
+  const deletedAmount = parseFloat(tableData.items[index].amount);
+  tableData.items.splice(index, 1);
+
+  if (tableData.items.length === 0) return;
+
+  const firstItem = tableData.items[0];
+  const newFirstAmount = parseFloat(firstItem.amount) + deletedAmount;
+  firstItem.amount = roundToPrecision(
+    newFirstAmount,
+    DISPLAY_PRECISION,
+  ).toString();
 };
+
 const calculateTargetPrice = (profit: number): number => {
   const price = store.price;
   let result;
@@ -95,7 +117,7 @@ const calculateTargetPrice = (profit: number): number => {
   } else {
     result = price * (1 - profit / 100);
   }
-  return roundToPrecision(result, 1);
+  return roundToPrecision(result, DISPLAY_PRECISION);
 };
 
 const calculateProfitFromPrice = (targetPrice: number): number => {
@@ -108,35 +130,35 @@ const calculateProfitFromPrice = (targetPrice: number): number => {
   } else {
     result = ((price - targetPrice) / price) * 100;
   }
-  return roundToPrecision(result, 1);
+  return roundToPrecision(result, DISPLAY_PRECISION);
 };
 
-const onProfitBlur = (index: number) => {
+const handleProfitBlur = (index: number) => {
   const profit = parseFloat(tableData.items[index].percent);
   if (isNaN(profit)) return;
 
-  const roundedProfit = roundToPrecision(profit, 1);
+  const roundedProfit = roundToPrecision(profit, DISPLAY_PRECISION);
   tableData.items[index].percent = roundedProfit.toString();
   const targetPrice = calculateTargetPrice(roundedProfit);
   tableData.items[index].price = targetPrice.toString();
 };
 
-const onTargetPriceBlur = (index: number) => {
+const handleTargetPriceBlur = (index: number) => {
   const targetPrice = parseFloat(tableData.items[index].price);
   if (isNaN(targetPrice)) return;
 
-  const roundedPrice = roundToPrecision(targetPrice, 1);
+  const roundedPrice = roundToPrecision(targetPrice, DISPLAY_PRECISION);
   tableData.items[index].price = roundedPrice.toString();
   const profit = calculateProfitFromPrice(roundedPrice);
   tableData.items[index].percent = profit.toString();
 };
 
-const onAddTarget = () => {
+const handleAddTarget = () => {
   const lastProfit =
     tableData.items.length > 0
       ? parseFloat(tableData.items[tableData.items.length - 1].percent)
       : 0;
-  const newProfit = roundToPrecision(lastProfit + 2, 1);
+  const newProfit = roundToPrecision(lastProfit + 2, DISPLAY_PRECISION);
   const targetPrice = calculateTargetPrice(newProfit);
   const newAmount = 20;
 
@@ -224,14 +246,14 @@ const validate = (): boolean => {
 
   if (totalAmount > 100) {
     const excess = totalAmount - 100;
-    errorMessage.value = `${totalAmount} out of 100% selected. Please decrease by ${excess.toFixed(2)}`;
+    errorMessage.value = `${totalAmount} out of 100% selected. Please decrease by ${excess.toFixed(DISPLAY_PRECISION)}`;
     tableData.items.forEach((item) => (item.error = true));
     return false;
   }
 
   if (totalAmount < 100) {
     const deficit = 100 - totalAmount;
-    errorMessage.value = `${totalAmount} out of 100% selected. Please increase by ${deficit.toFixed(2)}`;
+    errorMessage.value = `${totalAmount} out of 100% selected. Please increase by ${deficit.toFixed(DISPLAY_PRECISION)}`;
     tableData.items.forEach((item) => (item.error = true));
     return false;
   }
@@ -268,109 +290,120 @@ const sum = computed(() => {
 
   return roundToPrecision(total, 8);
 });
-const currency = "USDT"; // todo проверить
+const currency = "USDT";
 </script>
 <template>
-  <div>
+  <div class="bg-base-100 p-3">
     <div class="flex items-center gap-2 text-base-600">
-      <Tooltip :text="tooltipText" />
-      <span class="text-sm font-medium">Take Profit</span>
+      <Tooltip size="18" :text="tooltipText" />
+      <span class="text-base font-medium">Take Profit</span>
       <Toggle class="ml-auto" v-model="toggleValue" />
     </div>
-    <div v-if="toggleValue" class="mt-4">
-      <Table
-        :headers="tableData.headers"
-        :items="tableData.items"
-        row-class="pb-1 mb-3 border-b border-base-400"
-        error-class="pb-1 mb-3 border-b border-red-600"
-        gridColumns="grid-cols-[50px,1fr,85px] gap-3"
-      >
-        <template #cell-percent="{ value, error, index }">
-          <NumberInput
-            style="overflow: hidden"
-            no-style
-            :modelValue="parseFloat(tableData.items[index].percent)"
-            @update:modelValue="
-              tableData.items[index].percent = $event.toString()
-            "
-            @blur="onProfitBlur(index)"
-            :step="[0.01]"
-          >
-            <template #post-icon>
-              <span class="pl-2" :class="[!error && 'text-base-600']">%</span>
-            </template>
-          </NumberInput>
-        </template>
-        <template #cell-price="{ value, error, index }">
-          <NumberInput
-            style="overflow: hidden"
-            no-style
-            :modelValue="parseFloat(tableData.items[index].price)"
-            @update:modelValue="
-              tableData.items[index].price = $event.toString()
-            "
-            @blur="onTargetPriceBlur(index)"
-            :step="[0.01]"
-          >
-            <template #post-icon>
-              <span class="pl-2" :class="[!error && 'text-base-600']">{{
-                currency
-              }}</span>
-            </template>
-          </NumberInput>
-        </template>
-        <template #cell-amount="{ value, index, error }">
-          <div class="flex items-center justify-between">
+    <Expand>
+      <div v-if="toggleValue" class="">
+        <div class="h-4" />
+        <!-- Под переполнение таблицы макет не отрисован, поэтому просто обрезаю вывод. Таблица всё еще юзабельна -->
+        <Table
+          :headers="tableData.headers"
+          :items="tableData.items"
+          row-class="pb-[3px] mb-3 border-b border-base-400"
+          error-class="pb-1 mb-3 border-b border-red-600"
+          gridColumns="grid-cols-[47px,minmax(0,1fr),85px] gap-3"
+        >
+          <template #cell-percent="{ error, index }">
             <NumberInput
+              class="text-sm font-medium"
               style="overflow: hidden"
               no-style
-              :modelValue="parseFloat(tableData.items[index].amount)"
+              :modelValue="parseFloat(tableData.items[index].percent)"
               @update:modelValue="
-                tableData.items[index].amount = $event.toString()
+                tableData.items[index].percent = $event.toString()
               "
-              :step="[1]"
+              @blur="handleProfitBlur(index)"
+              :step="[1, 10]"
             >
               <template #post-icon>
-                <span class="pl-2" :class="[!error && 'text-base-600']">%</span>
+                <span class="pl-2" :class="[!error && 'text-base-600']">
+                  %
+                </span>
               </template>
             </NumberInput>
-            <button
-              @click="onDeleteFromTable(index)"
-              v-if="tableData.items.length > 1"
+          </template>
+          <template #cell-price="{ error, index }">
+            <NumberInput
+              class="text-sm font-medium"
+              style="overflow: hidden"
+              no-style
+              :modelValue="parseFloat(tableData.items[index].price)"
+              @update:modelValue="
+                tableData.items[index].price = $event.toString()
+              "
+              @blur="handleTargetPriceBlur(index)"
+              :step="[0.1, 1]"
             >
-              <CrossIcon class="size-4" />
-            </button>
+              <template #post-icon>
+                <span :class="[!error && 'text-base-600']">{{ currency }}</span>
+              </template>
+            </NumberInput>
+          </template>
+          <template #cell-amount="{ index, error }">
+            <div class="flex items-center justify-between">
+              <NumberInput
+                class="text-sm font-medium"
+                style="overflow: hidden"
+                no-style
+                :modelValue="parseFloat(tableData.items[index].amount)"
+                @update:modelValue="
+                  tableData.items[index].amount = $event.toString()
+                "
+                :step="[1, 10]"
+              >
+                <template #post-icon>
+                  <span class="pl-2" :class="[!error && 'text-base-600']">
+                    %
+                  </span>
+                </template>
+              </NumberInput>
+              <button
+                @click="handleDeleteFromTable(index)"
+                v-if="tableData.items.length > 1"
+              >
+                <CrossIcon class="size-4" />
+              </button>
+            </div>
+          </template>
+        </Table>
+
+        <div
+          v-if="errorMessage"
+          class="my-3 border border-red-500 px-3 py-2 text-xs font-medium text-red-500"
+        >
+          {{ errorMessage }}
+        </div>
+
+        <!-- Add -->
+        <button
+          @click.prevent="handleAddTarget"
+          class="flex items-center gap-2"
+          v-show="targetFrom < targetTo"
+        >
+          <PlusIcon class="size-6" />
+          <span class="text-xs text-eastern-blue-600">
+            Add profit target {{ targetFrom }}/{{ targetTo }}
+          </span>
+        </button>
+
+        <!-- Total profit -->
+        <div class="mt-4 flex items-center text-sm text-base-600">
+          <span class="flex-shrink-0"> Projected profit </span>
+          <div
+            class="mx-2 flex-grow self-end border-b border-dashed border-base-500"
+          />
+          <div class="flex-shrink-0 text-base-950">
+            {{ sum }} <span>{{ currency }}</span>
           </div>
-        </template>
-      </Table>
-
-      <div
-        v-if="errorMessage"
-        class="my-3 border border-red-500 px-3 py-2 text-xs font-medium text-red-500"
-      >
-        {{ errorMessage }}
-      </div>
-
-      <!-- Add -->
-      <button
-        @click.prevent="onAddTarget"
-        class="flex items-center gap-2"
-        v-show="targetFrom < targetTo"
-      >
-        <PlusIcon class="size-5" />
-        <span class="text-xs text-eastern-blue-600">
-          Add profit target {{ targetFrom }}/{{ targetTo }}
-        </span>
-      </button>
-
-      <!-- Total profit -->
-      <div class="mt-4 flex items-center text-sm text-base-600">
-        <span class="flex-shrink-0"> Projected profit </span>
-        <div class="mx-2 flex-grow border-b border-dashed border-base-500" />
-        <div class="flex-shrink-0 text-base-950">
-          {{ sum }} <span>{{ currency }}</span>
         </div>
       </div>
-    </div>
+    </Expand>
   </div>
 </template>
