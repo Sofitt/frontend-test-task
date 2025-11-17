@@ -46,7 +46,13 @@ const holdStep = props.step.length > 1 ? props.step[1] : props.step[0];
 
 const inputWidth = computed(() => {
   const ln = displayValue.value.length;
-  const width = ln > 6 && displayValue.value.includes(".") ? ln - 1 : ln;
+  const spacesCount = (displayValue.value.match(/\s/g) || []).length;
+  let width: number = ln;
+  if (!displayValue.value.includes(".")) {
+    width = spacesCount > 0 ? ln : ln + 1;
+  } else if (ln > 6) {
+    width = ln - 1;
+  }
   return `${Math.max(1, width)}ch`;
 });
 
