@@ -307,7 +307,7 @@ export const useTakeProfit = () => {
       return total + projectedProfit;
     }, 0);
 
-    return roundToPrecision(total, 8);
+    return roundToPrecision(total, 2);
   });
 
   return {
