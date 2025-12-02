@@ -268,6 +268,16 @@ export const useTakeProfit = () => {
         errorMessage.value = "";
       }
     }
+
+    const totalAmount = tableData.items.reduce(
+      (sum, item) => sum + parseFloat(item.amount || "0"),
+      0,
+    );
+
+    if (totalAmount === 100) {
+      errorMessage.value = "";
+      tableData.items.forEach((item) => (item.error = false));
+    }
   };
 
   const hasError = computed(() => {
